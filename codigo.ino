@@ -113,7 +113,7 @@ void detectarBotao()
   else if (duracaoClique > 300)
   {      
    modo++;
-   if modo > 3 )modo = 0;  
+   if (modo > 3 )modo = 0;  
     
    Serial.print("-CLIQUE LONGO- ");  
   } 
