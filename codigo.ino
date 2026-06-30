@@ -2,12 +2,12 @@
 int led2 = 4; //vermelho
 int led1 = 5; //verde
 int botao = 6;
-int fase = 0; //fase
-int modo = 0; //modo
-int botAnterior = 0; //estado botao
+int fase = 0;
+int modo = 0;
+int botAnterior = 0; //estado botão
 int botAtual = 0;
 
-int led1Ativo = 0; //contador led
+int led1Ativo = 0;
 int led2Ativo = 0;            
 
 unsigned long tempoLed1 = 0;
@@ -16,21 +16,17 @@ unsigned long tempoLed2 = 0;
 bool estadoLed1 = LOW;
 bool estadoLed2 = LOW;
 
-int a = 0; // contadores de tempo
-int b = 0;
-int c = 0;
+unsigned long tempoInicioClique = 0;
+unsigned long tempoFimClique = 0;
+unsigned long duracaoClique = 0;
 
 
 void desligarLed(int led)
 { 
-digitalWrite(led,LOW);
-}//desliga led
+  digitalWrite(led, LOW);
+}
 
-void ligarLed(int led)
-{ 
-digitalWrite(led,HIGH);
-}//liga led
-
+// Liga o led se ele estiver ativo. (desliga se não)
 void ligarSeAtivo(int led, int ativo)
 {
   if (ativo == 1)
@@ -39,117 +35,125 @@ void ligarSeAtivo(int led, int ativo)
   }else{
     digitalWrite(led, LOW);
   }
-}//liga o led se ele estiver ativo. (desliga se não)
+}
 
+// Verifica se o led está ativo e, se estiver, pisca em certo intervalo. (desliga se não)
 void piscarSeAtivo(int led, int ativo, unsigned long &tempo, bool &estado, int intervalo)
 {
-  if (ativo == 1)
-  { 
-    if (millis() - tempo >= intervalo)
-    {
-      tempo = millis();
-      estado = !estado;
-      digitalWrite(led, estado);
-    }
-  }
-else
-  { 
-  desligarLed(led);
-  } 
-}//verifica se o led está ativo e, se estiver, pisca em certo intervalo (desliga se não)
+ if (ativo == 1)
+ { 
+   if (millis() - tempo >= intervalo)
+   {
+     tempo = millis();
+     estado = !estado;
+     digitalWrite(led, estado);
+   }
+ }
+ else
+ { 
+   desligarLed(led);
+ } 
+}
 
+// Define quais leds participam da fase atual.
 void definirLedsAtivos()
 {
-   if(fase == 1) //fase 1
+ if(fase == 1)
  {
    led1Ativo = 1;
-   led2Ativo = 0;
-    
-   
- }else if(fase == 2) //fase 2
+   led2Ativo = 0;      
+ }
+ else if (fase == 2)
  {
    led1Ativo = 0;
    led2Ativo = 1;
-
- }else if(fase == 3) //fase 3
+ }
+ else if (fase == 3)
  {
    led1Ativo = 1;
    led2Ativo = 1;
-
- }else
+ }
+ else
  {
    led1Ativo = 0;
-   led2Ativo = 0;
-   
+   led2Ativo = 0;   
    desligarLed(led1);
    desligarLed(led2); 
  }
-}//define qual led estará ligado a depender da fase
+}
 
 void detectarBotao()
 {
- if(botAnterior == LOW && botAtual == HIGH)
-  {
-  a = millis();
-   
+ if (botAnterior == LOW && botAtual == HIGH)
+ {
+  // Inicia a medição da duração do clique e reinicia o estado dos LEDs.
+  tempoInicioClique = millis();    
   tempoLed1 = millis(); 
   tempoLed2 = millis();  
 
   estadoLed1 = LOW;
   estadoLed2 = LOW; 
    
-  }  //assim que o botao é clicado, reseta algumas variaveis e começa a contar o tempo
-  if(botAnterior == HIGH && botAtual == LOW)
- {
-        
-  b = millis();  
-  c = b - a;   
+ }
+ if (botAnterior == HIGH && botAtual == LOW) 
+ {  
+ // Ao soltar o botão, calcula a duração do clique para diferenciar.
+ // clique curto (troca a fase) de clique longo (troca o modo).
+
+  tempoFimClique = millis();  
+  duracaoClique = tempoFimClique - tempoInicioClique;   
     
-    if(c < 500){    
-    fase++;     
-    if(fase > 3 )fase = 0;
-      
-   Serial.print("-CLIQUE CURTO- ");  
-      
-   }else if(c > 500){  
-   Serial.print("-CLIQUE LONGO- ");      
+  if (duracaoClique < 300)
+  {    
+   fase++;     
+   if (fase > 3 )fase = 0;   
+    
+   Serial.print("-CLIQUE CURTO- ");        
+  }
+  else if (duracaoClique > 300)
+  {      
    modo++;
-   if(modo > 3 )modo = 0;      
-  } 
- }//qnd o botao é solto, ve qnd tempo ficou apertado e decide o tipo de ação
+   if modo > 3 )modo = 0;  
     
- botAnterior = botAtual;
+   Serial.print("-CLIQUE LONGO- ");  
+  } 
+ }
+  botAnterior = botAtual;
 }
 
+// Exibe no monitor serial a fase e o modo atuais.
 void mostrarInfo()
 { 
  Serial.print("Fase: ");
  Serial.print(fase);
  Serial.print(". Modo: ");
  Serial.println(modo);
-}//função para mostrar informações
-  
+}
+
+// Executa o comportamento dos LEDs de acordo com o modo selecionado.  
 void executarModo()
 {
-  if(modo == 1) //modo 1 
+ if (modo == 1)
  { 
   piscarSeAtivo(led1, led1Ativo, tempoLed1, estadoLed1, 500);
   piscarSeAtivo(led2, led2Ativo, tempoLed2, estadoLed2, 500);
- }else if (modo == 2)//modo 2
+ }
+ else if (modo == 2)
  {
   piscarSeAtivo(led1, led1Ativo, tempoLed1, estadoLed1, 200);
   piscarSeAtivo(led2, led2Ativo, tempoLed2, estadoLed2, 200);
- }else if(modo == 3)//modo 3
-   
-{
+ }
+ else if (modo == 3)  
+ {
   ligarSeAtivo(led1, led1Ativo);
-  ligarSeAtivo(led2, led2Ativo);
-  
- }else{
-      desligarLed(led1);
-      desligarLed(led2);
-    } 
-}  //função do modo
+  ligarSeAtivo(led2, led2Ativo);  
+ }
+ else
+ {
+  desligarLed(led1);
+  desligarLed(led2);
+ } 
+}
 
 void setup()
 {
