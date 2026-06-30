@@ -35,6 +35,6 @@ Projeto desenvolvido no Tinkercad para praticar programação embarcada utilizan
 
 ## Imagens
 
-![Circuito](imagens/circuito.png)
+![Circuito](imagens-circuito.png)
 
-![Funcionando](imagens/funcionando.png)
+![Funcionando](imagens-funcionando.png)
