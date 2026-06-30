@@ -173,4 +173,4 @@ void loop()
  definirLedsAtivos();
  executarModo(); 
 
-} //final
+}
